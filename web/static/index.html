@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorldQuant Brain Alpha Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .accent-gradient { background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%); }
+    .metric-pass { color: #10b981; }
+    .metric-fail { color: #ef4444; }
+    .metric-warn { color: #f59e0b; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased flex flex-col">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <i class="fa-solid fa-chart-line text-white text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            WorldQuant Alpha Studio
+            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">Consultant Pro</span>
+          </h1>
+          <p class="text-xs text-slate-400">Daily Alpha Generation & Backtest Submission Engine</p>
+        </div>
+      </div>
+
+      <nav class="flex items-center space-x-1 sm:space-x-2">
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-tab px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-slate-800 border border-slate-700">
+          <i class="fa-solid fa-gauge-high mr-1.5 text-blue-400"></i>Dashboard
+        </button>
+        <button onclick="switchTab('generator')" id="nav-generator" class="nav-tab px-3 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="fa-solid fa-wand-magic-sparkles mr-1.5 text-emerald-400"></i>Generator
+        </button>
+        <button onclick="switchTab('templates')" id="nav-templates" class="nav-tab px-3 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="fa-solid fa-book-bookmark mr-1.5 text-purple-400"></i>Archetypes
+        </button>
+        <button onclick="switchTab('editor')" id="nav-editor" class="nav-tab px-3 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="fa-solid fa-code mr-1.5 text-amber-400"></i>Linter & Sim
+        </button>
+        <button onclick="switchTab('journal')" id="nav-journal" class="nav-tab px-3 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="fa-solid fa-table-list mr-1.5 text-cyan-400"></i>Alpha Journal
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- TAB 1: DASHBOARD -->
+    <section id="tab-dashboard" class="space-y-6">
+      <!-- Consultant Daily Target Banner -->
+      <div class="glass-card rounded-2xl p-6 relative overflow-hidden border border-slate-700/60 shadow-xl">
+        <div class="absolute right-0 top-0 w-96 h-96 bg-gradient-to-br from-blue-500/10 to-emerald-500/10 rounded-full blur-3xl -z-10"></div>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                <i class="fa-regular fa-calendar-check"></i> Today's Quota
+              </span>
+              <span id="daily-date-str" class="text-xs text-slate-400"></span>
+            </div>
+            <h2 class="text-2xl font-bold text-white tracking-tight">Daily Consultant Alpha Submissions</h2>
+            <p class="text-sm text-slate-300 max-w-2xl">
+              WorldQuant Brain rewards consistent daily submissions with low turnover and Sharpe &ge; 1.25 (preferred &ge; 1.58).
+              Aim for <strong class="text-white">3 quality alpha submissions</strong> today across non-overlapping themes.
+            </p>
+          </div>
+          
+          <div class="flex items-center gap-4 bg-slate-900/80 p-4 rounded-xl border border-slate-800 shadow-inner">
+            <div class="text-center px-3 border-r border-slate-800">
+              <div class="text-xs text-slate-400 uppercase font-semibold">Today's Sims</div>
+              <div id="stat-sims-today" class="text-2xl font-bold text-blue-400 mt-1">0 / 15</div>
+            </div>
+            <div class="text-center px-3">
+              <div class="text-xs text-slate-400 uppercase font-semibold">Submissions</div>
+              <div id="stat-subs-today" class="text-2xl font-bold text-emerald-400 mt-1">0 / 3</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key Metrics Row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-card rounded-xl p-5 border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400 uppercase font-semibold tracking-wider">Submittable Alphas</span>
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+              <i class="fa-solid fa-check-double"></i>
+            </div>
+          </div>
+          <div id="metric-passed-count" class="text-3xl font-extrabold text-white mt-2">0</div>
+          <div class="text-xs text-slate-400 mt-1 flex items-center gap-1">
+            <span class="text-emerald-400"><i class="fa-solid fa-arrow-trend-up"></i> Sharpe &ge; 1.25</span>, Fitness &ge; 1.0
+          </div>
+        </div>
+
+        <div class="glass-card rounded-xl p-5 border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400 uppercase font-semibold tracking-wider">Avg Passed Sharpe</span>
+            <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+          </div>
+          <div id="metric-avg-sharpe" class="text-3xl font-extrabold text-white mt-2">0.00</div>
+          <div class="text-xs text-slate-400 mt-1 text-slate-400">Target: &gt; 1.58 for top consultant tier</div>
+        </div>
+
+        <div class="glass-card rounded-xl p-5 border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400 uppercase font-semibold tracking-wider">Target Turnover</span>
+            <div class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center">
+              <i class="fa-solid fa-arrows-rotate"></i>
+            </div>
+          </div>
+          <div class="text-3xl font-extrabold text-purple-400 mt-2">&lt; 35%</div>
+          <div class="text-xs text-slate-400 mt-1">Brain Max Limit: 70% (Sweet spot: 5-30%)</div>
+        </div>
+
+        <div class="glass-card rounded-xl p-5 border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400 uppercase font-semibold tracking-wider">Submission Ready</span>
+            <div class="w-8 h-8 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
+              <i class="fa-solid fa-paper-plane"></i>
+            </div>
+          </div>
+          <div id="metric-submitted-count" class="text-3xl font-extrabold text-white mt-2">0</div>
+          <div class="text-xs text-slate-400 mt-1">Logged into WQ Brain repository</div>
+        </div>
+      </div>
+
+      <!-- Quick Action Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-4 glass-card p-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2">
+          <button onclick="generateBatch('all', 10)" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white text-sm font-semibold rounded-lg shadow-lg shadow-blue-500/20 flex items-center gap-2 transition">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Today's 10 Candidate Batch
+          </button>
+          <button onclick="switchTab('templates')" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg border border-slate-700 flex items-center gap-2 transition">
+            <i class="fa-solid fa-book-open"></i> Browse 80+ Tested Archetypes
+          </button>
+        </div>
+        <div class="text-xs text-slate-400 flex items-center gap-2">
+          <i class="fa-solid fa-shield-halved text-emerald-400"></i> Standard Simulation: Delay 1 &bull; Decay 5 &bull; Subindustry Neutral
+        </div>
+      </div>
+
+      <!-- Recent High Potential Candidates -->
+      <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-star text-amber-400"></i> Priority Candidate Alphas for Today
+          </h3>
+          <button onclick="loadAlphas()" class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1">
+            <i class="fa-solid fa-arrows-rotate"></i> Refresh
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-900/60 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="py-3 px-4">Name & Theme</th>
+                <th class="py-3 px-4">Formula (FastExpr)</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4">Sharpe</th>
+                <th class="py-3 px-4">Turnover</th>
+                <th class="py-3 px-4">Fitness</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="dashboard-recent-table" class="divide-y divide-slate-800/60">
+              <tr>
+                <td colspan="7" class="py-6 text-center text-slate-500">
+                  No alphas simulated yet today. Click "Generate Today's 10 Candidate Batch" above!
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: GENERATOR -->
+    <section id="tab-generator" class="hidden space-y-6">
+      <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-6">
+        <div>
+          <h2 class="text-xl font-bold text-white">Systematic Alpha Synthesizer</h2>
+          <p class="text-sm text-slate-400 mt-1">
+            Generates combinations of fundamental, analyst, and microstructure signals transformed via WorldQuant time-series decay and cross-sectional group operators.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-800">
+          <button onclick="generateBatch('all', 8)" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+            <i class="fa-solid fa-shapes"></i> Balanced Mix (All Themes)
+          </button>
+          <button onclick="generateBatch('fundamental', 6)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-slate-700">
+            <i class="fa-solid fa-file-invoice-dollar text-emerald-400"></i> Fundamental & Accruals
+          </button>
+          <button onclick="generateBatch('analyst', 6)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-slate-700">
+            <i class="fa-solid fa-user-tie text-purple-400"></i> Analyst Revisions & Consensus
+          </button>
+          <button onclick="generateBatch('microstructure', 6)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-slate-700">
+            <i class="fa-solid fa-chart-simple text-amber-400"></i> VWAP & Microstructure
+          </button>
+          <button onclick="generateBatch('interaction', 6)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-slate-700">
+            <i class="fa-solid fa-network-wired text-cyan-400"></i> Multi-Factor Interactions
+          </button>
+        </div>
+
+        <!-- Generated Alphas Container -->
+        <div id="generator-results-container" class="space-y-4 pt-4">
+          <div class="p-8 text-center text-slate-500 border border-dashed border-slate-800 rounded-xl">
+            Choose a theme above to synthesize fresh, syntactically validated WorldQuant FastExpr alphas.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: ARCHETYPES / TEMPLATES -->
+    <section id="tab-templates" class="hidden space-y-6">
+      <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white">Peer-Reviewed Alpha Archetypes</h2>
+            <p class="text-sm text-slate-400 mt-1">
+              Tested mathematical formulations with proven academic foundations (Novy-Marx, Sloan, Jegadeesh-Titman, Amihud).
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="archetype-cat-select" onchange="loadTemplates(this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500">
+              <option value="">All Categories (10)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="templates-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: LINTER & SIMULATION SANDBOX -->
+    <section id="tab-editor" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Editor Column (2 cols) -->
+        <div class="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-code text-amber-400"></i> FastExpr Formula Editor & Linter
+            </h2>
+            <span class="text-xs text-slate-400 font-mono">Brain FastExpr Dialect</span>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs text-slate-400 font-medium">Alpha Name / Tag</label>
+            <input id="editor-name" type="text" placeholder="e.g., Sloan Accruals Subindustry Decayed" 
+                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white focus:border-blue-500 outline-none">
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs text-slate-400 font-medium">FastExpr Formula</label>
+              <button onclick="formatAndCleanFormula()" class="text-xs text-blue-400 hover:text-blue-300">Clean & Format</button>
+            </div>
+            <textarea id="editor-formula" rows="5" 
+                      placeholder="e.g. -group_neutralize(rank(ts_decay_linear((net_income - cfo) / (assets + 0.0001), 10)), subindustry)"
+                      class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm font-mono text-emerald-300 focus:border-emerald-500 outline-none resize-y"></textarea>
+          </div>
+
+          <!-- Linter Output Box -->
+          <div id="linter-box" class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Syntax & Quality Linter</span>
+              <span id="linter-status-badge" class="text-xs px-2 py-0.5 rounded-full font-medium bg-slate-800 text-slate-400">Not validated</span>
+            </div>
+            <div id="linter-messages" class="text-xs space-y-1 text-slate-300">
+              Type or paste an expression to inspect syntax, lookahead bias, and turnover optimization.
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-wrap items-center gap-3 pt-2">
+            <button onclick="validateCurrentFormula()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-sm font-medium transition flex items-center gap-2">
+              <i class="fa-solid fa-spell-check text-blue-400"></i> Check Syntax
+            </button>
+            <button onclick="copyCurrentFormula()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-sm font-medium transition flex items-center gap-2">
+              <i class="fa-solid fa-copy text-amber-400"></i> Copy FastExpr
+            </button>
+            <button onclick="runSimulation()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-emerald-500/20">
+              <i class="fa-solid fa-play"></i> Simulate Backtest
+            </button>
+          </div>
+        </div>
+
+        <!-- Simulation Settings Column (1 col) -->
+        <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-5">
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-blue-400"></i> Simulation Settings
+          </h3>
+
+          <div class="space-y-4 text-sm">
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Region</label>
+              <select id="sim-region" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white outline-none">
+                <option value="USA">USA (Standard)</option>
+                <option value="EUR">EUR (Europe)</option>
+                <option value="ASI">ASI (Asia)</option>
+                <option value="CHN">CHN (China)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Universe</label>
+              <select id="sim-universe" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white outline-none">
+                <option value="TOP3000">TOP3000 (Recommended)</option>
+                <option value="TOP1000">TOP1000 (Liquid)</option>
+                <option value="TOP500">TOP500 (Large Cap)</option>
+                <option value="MINVOL1M">MINVOL1M</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Delay</label>
+              <select id="sim-delay" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white outline-none">
+                <option value="1">Delay 1 (Close-to-Close Daily Standard)</option>
+                <option value="0">Delay 0 (Intraday execution)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Decay (Linear Smoothing)</label>
+              <select id="sim-decay" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white outline-none">
+                <option value="5" selected>5 Days (Standard - Cuts Turnover)</option>
+                <option value="8">8 Days (Low Turnover)</option>
+                <option value="10">10 Days (Fundamental / Long Horizon)</option>
+                <option value="3">3 Days (Fast)</option>
+                <option value="0">0 (No Decay - High Turnover Risk)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Factor Neutralization</label>
+              <select id="sim-neutralization" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white outline-none">
+                <option value="SUBINDUSTRY" selected>SUBINDUSTRY (WorldQuant Gold Standard)</option>
+                <option value="INDUSTRY">INDUSTRY</option>
+                <option value="SECTOR">SECTOR</option>
+                <option value="MARKET">MARKET</option>
+                <option value="NONE">NONE</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Simulation Output Results Display -->
+          <div id="sim-result-box" class="hidden p-4 rounded-xl bg-slate-900/90 border border-slate-700 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-white uppercase">Simulation Results</span>
+              <span id="sim-verdict-badge" class="text-xs px-2 py-0.5 rounded-full font-semibold"></span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="bg-slate-950 p-2 rounded">
+                <div class="text-slate-400">Sharpe Ratio</div>
+                <div id="res-sharpe" class="text-sm font-bold text-white mt-0.5"></div>
+              </div>
+              <div class="bg-slate-950 p-2 rounded">
+                <div class="text-slate-400">Turnover</div>
+                <div id="res-turnover" class="text-sm font-bold text-white mt-0.5"></div>
+              </div>
+              <div class="bg-slate-950 p-2 rounded">
+                <div class="text-slate-400">Fitness</div>
+                <div id="res-fitness" class="text-sm font-bold text-white mt-0.5"></div>
+              </div>
+              <div class="bg-slate-950 p-2 rounded">
+                <div class="text-slate-400">Margin</div>
+                <div id="res-margin" class="text-sm font-bold text-white mt-0.5"></div>
+              </div>
+            </div>
+            <div id="res-sub-universe" class="text-xs text-slate-400"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: JOURNAL -->
+    <section id="tab-journal" class="hidden space-y-6">
+      <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white">Alpha Backtest Journal & Tracker</h2>
+            <p class="text-sm text-slate-400 mt-1">Complete audit log of all candidate, simulated, and submitted alphas.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="journal-filter-status" onchange="loadJournal()" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 outline-none">
+              <option value="">All Statuses</option>
+              <option value="passed">Passed (Sharpe &ge; 1.25)</option>
+              <option value="submitted">Submitted</option>
+              <option value="simulated">Simulated</option>
+              <option value="draft">Drafts</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-900/60 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="py-3 px-4">ID</th>
+                <th class="py-3 px-4">Name</th>
+                <th class="py-3 px-4">Category</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4">Sharpe</th>
+                <th class="py-3 px-4">Turnover</th>
+                <th class="py-3 px-4">Fitness</th>
+                <th class="py-3 px-4">Margin</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="journal-table-body" class="divide-y divide-slate-800/60">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 max-w-sm px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-medium"></div>
+
+  <!-- JavaScript Application Logic -->
+  <script>
+    let currentTab = 'dashboard';
+
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.className = `fixed bottom-6 right-6 z-50 transform transition-all duration-300 max-w-sm px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-medium ${
+        type === 'success' ? 'bg-emerald-600 text-white' :
+        type === 'error' ? 'bg-red-600 text-white' : 'bg-slate-800 text-white border border-slate-700'
+      }`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check' : type === 'error' ? 'fa-triangle-exclamation' : 'fa-circle-info'}"></i> <span>${message}</span>`;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3500);
+    }
+
+    function switchTab(tabId) {
+      currentTab = tabId;
+      ['dashboard', 'generator', 'templates', 'editor', 'journal'].forEach(t => {
+        const tabEl = document.getElementById(`tab-${t}`);
+        const navEl = document.getElementById(`nav-${t}`);
+        if (t === tabId) {
+          tabEl.classList.remove('hidden');
+          navEl.className = 'nav-tab px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-slate-800 border border-slate-700';
+        } else {
+          tabEl.classList.add('hidden');
+          navEl.className = 'nav-tab px-3 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60';
+        }
+      });
+      if (tabId === 'dashboard') loadStats();
+      if (tabId === 'templates') loadTemplates();
+      if (tabId === 'journal') loadJournal();
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/stats');
+        const data = await res.json();
+        
+        document.getElementById('daily-date-str').textContent = data.daily.date;
+        document.getElementById('stat-sims-today').textContent = `${data.daily.simulations_done} / ${data.daily.target_simulations}`;
+        document.getElementById('stat-subs-today').textContent = `${data.daily.submissions_done} / ${data.daily.target_submissions}`;
+        
+        document.getElementById('metric-passed-count').textContent = data.summary.status_counts['passed'] || 0;
+        document.getElementById('metric-avg-sharpe').textContent = data.summary.avg_sharpe_passed.toFixed(2);
+        document.getElementById('metric-submitted-count').textContent = data.summary.status_counts['submitted'] || 0;
+
+        loadRecentAlphas();
+      } catch (err) {
+        console.error("Failed to load stats:", err);
+      }
+    }
+
+    async function loadRecentAlphas() {
+      try {
+        const res = await fetch('/api/alphas?limit=8');
+        const data = await res.json();
+        const tbody = document.getElementById('dashboard-recent-table');
+        tbody.innerHTML = '';
+
+        if (!data.alphas || data.alphas.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-500">No alphas tracked yet. Click "Generate Today's 10 Candidate Batch" above!</td></tr>`;
+          return;
+        }
+
+        data.alphas.forEach(a => {
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-slate-800/40 transition';
+          tr.innerHTML = `
+            <td class="py-3 px-4">
+              <div class="font-medium text-white">${escapeHtml(a.name)}</div>
+              <div class="text-xs text-slate-400">${escapeHtml(a.category)} &bull; ${a.region}/${a.universe}</div>
+            </td>
+            <td class="py-3 px-4 font-mono text-xs text-emerald-400 max-w-xs truncate" title="${escapeHtml(a.formula)}">
+              ${escapeHtml(a.formula)}
+            </td>
+            <td class="py-3 px-4">${getStatusBadge(a.status)}</td>
+            <td class="py-3 px-4 font-mono font-semibold ${getSharpeClass(a.sharpe)}">${a.sharpe !== null ? a.sharpe.toFixed(2) : '-'}</td>
+            <td class="py-3 px-4 font-mono ${getTurnoverClass(a.turnover)}">${a.turnover !== null ? (a.turnover * 100).toFixed(1) + '%' : '-'}</td>
+            <td class="py-3 px-4 font-mono">${a.fitness !== null ? a.fitness.toFixed(2) : '-'}</td>
+            <td class="py-3 px-4 text-right space-x-2">
+              <button onclick="loadIntoEditor(${JSON.stringify(a).replace(/"/g, '&quot;')})" class="text-xs px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded border border-slate-700">Test</button>
+              <button onclick="copyFormula('${escapeForJs(a.formula)}')" class="text-xs px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700">Copy</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function generateBatch(theme = 'all', count = 8) {
+      showToast(`Synthesizing ${count} ${theme} alpha formulas...`);
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ theme, count })
+        });
+        const data = await res.json();
+        renderGeneratedAlphas(data.generated);
+        showToast(`Generated ${data.generated.length} alphas!`, 'success');
+        loadStats();
+      } catch (err) {
+        showToast("Generation error", "error");
+      }
+    }
+
+    function renderGeneratedAlphas(alphas) {
+      const container = document.getElementById('generator-results-container');
+      container.innerHTML = '';
+
+      alphas.forEach(a => {
+        const card = document.createElement('div');
+        card.className = 'glass-card p-4 rounded-xl border border-slate-800 space-y-3';
+        card.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <div class="font-bold text-white text-sm">${escapeHtml(a.name)}</div>
+              <div class="text-xs text-slate-400">${escapeHtml(a.category)} &bull; Decay: ${a.decay} &bull; Neutralization: ${a.neutralization}</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="loadIntoEditor(${JSON.stringify(a).replace(/"/g, '&quot;')})" class="text-xs px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 rounded-lg flex items-center gap-1">
+                <i class="fa-solid fa-code"></i> Open in Linter
+              </button>
+              <button onclick="copyFormula('${escapeForJs(a.formula)}')" class="text-xs px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg flex items-center gap-1">
+                <i class="fa-solid fa-copy"></i> Copy
+              </button>
+              <button onclick="quickSimulate(${a.id})" class="text-xs px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg flex items-center gap-1">
+                <i class="fa-solid fa-play"></i> Simulate
+              </button>
+            </div>
+          </div>
+          <div class="p-3 bg-slate-900 rounded-lg font-mono text-xs text-emerald-400 break-all select-all border border-slate-800">
+            ${escapeHtml(a.formula)}
+          </div>
+          <div class="text-xs text-slate-400">${escapeHtml(a.description || '')}</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function loadTemplates(category = '') {
+      try {
+        const url = category ? `/api/templates?category=${encodeURIComponent(category)}` : '/api/templates';
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        // Populate category dropdown once
+        const catSelect = document.getElementById('archetype-cat-select');
+        if (catSelect.options.length <= 1) {
+          data.categories.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c;
+            catSelect.appendChild(opt);
+          });
+        }
+
+        const grid = document.getElementById('templates-grid');
+        grid.innerHTML = '';
+        data.templates.forEach(t => {
+          const card = document.createElement('div');
+          card.className = 'glass-card p-5 rounded-xl border border-slate-800 flex flex-col justify-between space-y-4';
+          card.innerHTML = `
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">${escapeHtml(t.category)}</span>
+                <span class="text-xs text-slate-400">${escapeHtml(t.expected_turnover)}</span>
+              </div>
+              <h3 class="font-bold text-white text-sm">${escapeHtml(t.name)}</h3>
+              <p class="text-xs text-slate-300">${escapeHtml(t.description)}</p>
+              <div class="p-2.5 bg-slate-900 rounded-lg font-mono text-xs text-emerald-400 break-all select-all border border-slate-800">
+                ${escapeHtml(t.formula)}
+              </div>
+              <p class="text-xs text-slate-400 italic">Academic basis: ${escapeHtml(t.rationale)}</p>
+            </div>
+            <div class="flex items-center justify-between pt-3 border-t border-slate-800 text-xs">
+              <span class="text-slate-400">Fields: <strong class="text-slate-200">${t.data_fields.join(', ')}</strong></span>
+              <div class="flex items-center gap-2">
+                <button onclick="copyFormula('${escapeForJs(t.formula)}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700">Copy</button>
+                <button onclick="loadTemplateIntoEditor(${JSON.stringify(t).replace(/"/g, '&quot;')})" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium">Use in Linter</button>
+              </div>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function loadTemplateIntoEditor(t) {
+      document.getElementById('editor-name').value = t.name;
+      document.getElementById('editor-formula').value = t.formula;
+      document.getElementById('sim-decay').value = t.recommended_decay || 5;
+      document.getElementById('sim-neutralization').value = t.recommended_neutralization || 'SUBINDUSTRY';
+      switchTab('editor');
+      validateCurrentFormula();
+    }
+
+    function loadIntoEditor(a) {
+      document.getElementById('editor-name').value = a.name || 'Untitled';
+      document.getElementById('editor-formula').value = a.formula;
+      if (a.decay) document.getElementById('sim-decay').value = a.decay;
+      if (a.neutralization) document.getElementById('sim-neutralization').value = a.neutralization;
+      switchTab('editor');
+      validateCurrentFormula();
+    }
+
+    async function validateCurrentFormula() {
+      const formula = document.getElementById('editor-formula').value.trim();
+      const decay = parseInt(document.getElementById('sim-decay').value, 10);
+      const neutralization = document.getElementById('sim-neutralization').value;
+
+      const res = await fetch('/api/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formula, settings: { decay, neutralization } })
+      });
+      const data = await res.json();
+      
+      const badge = document.getElementById('linter-status-badge');
+      const msgBox = document.getElementById('linter-messages');
+
+      if (data.valid) {
+        badge.className = 'text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        badge.innerHTML = '<i class="fa-solid fa-check"></i> Valid Syntax';
+      } else {
+        badge.className = 'text-xs px-2 py-0.5 rounded-full font-medium bg-red-500/20 text-red-400 border border-red-500/30';
+        badge.innerHTML = '<i class="fa-solid fa-xmark"></i> Syntax Error';
+      }
+
+      let html = '';
+      if (data.errors && data.errors.length > 0) {
+        html += `<div class="text-red-400 font-semibold"><i class="fa-solid fa-circle-exclamation"></i> Errors:</div>`;
+        data.errors.forEach(e => html += `<div class="text-red-400 ml-4">&bull; ${escapeHtml(e)}</div>`);
+      }
+      if (data.warnings && data.warnings.length > 0) {
+        html += `<div class="text-amber-400 font-semibold mt-1"><i class="fa-solid fa-triangle-exclamation"></i> Warnings:</div>`;
+        data.warnings.forEach(w => html += `<div class="text-amber-300 ml-4">&bull; ${escapeHtml(w)}</div>`);
+      }
+      if (data.suggestions && data.suggestions.length > 0) {
+        html += `<div class="text-blue-400 font-semibold mt-1"><i class="fa-solid fa-lightbulb"></i> Optimization Tips:</div>`;
+        data.suggestions.forEach(s => html += `<div class="text-blue-300 ml-4">&bull; ${escapeHtml(s)}</div>`);
+      }
+      if (!data.errors.length && !data.warnings.length && !data.suggestions.length) {
+        html = '<div class="text-emerald-400"><i class="fa-solid fa-circle-check"></i> Clean expression! Formula complies with WorldQuant FastExpr standards.</div>';
+      }
+
+      msgBox.innerHTML = html;
+      return data.valid;
+    }
+
+    async function runSimulation() {
+      const formula = document.getElementById('editor-formula').value.trim();
+      const name = document.getElementById('editor-name').value.trim() || 'Custom Alpha';
+      const decay = parseInt(document.getElementById('sim-decay').value, 10);
+      const neutralization = document.getElementById('sim-neutralization').value;
+      const universe = document.getElementById('sim-universe').value;
+      const region = document.getElementById('sim-region').value;
+
+      if (!formula) {
+        showToast("Formula is empty", "error");
+        return;
+      }
+
+      showToast("Running backtest simulation...", "info");
+
+      // Save alpha first
+      const saveRes = await fetch('/api/save_alpha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, formula, decay, neutralization, universe, region, category: "Custom" })
+      });
+      const saveData = await saveRes.json();
+      const alpha_id = saveData.id;
+
+      // Simulate
+      const simRes = await fetch('/api/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alpha_id, formula, decay, neutralization, universe, region })
+      });
+      const simData = await simRes.json();
+      
+      const metrics = simData.metrics || {};
+      const box = document.getElementById('sim-result-box');
+      box.classList.remove('hidden');
+
+      document.getElementById('res-sharpe').textContent = metrics.sharpe !== undefined ? metrics.sharpe.toFixed(2) : '-';
+      document.getElementById('res-turnover').textContent = metrics.turnover !== undefined ? (metrics.turnover * 100).toFixed(1) + '%' : '-';
+      document.getElementById('res-fitness').textContent = metrics.fitness !== undefined ? metrics.fitness.toFixed(2) : '-';
+      document.getElementById('res-margin').textContent = metrics.margin_bps !== undefined ? metrics.margin_bps.toFixed(1) + ' bps' : '-';
+
+      const badge = document.getElementById('sim-verdict-badge');
+      if (metrics.sharpe >= 1.25 && metrics.fitness >= 1.0 && metrics.turnover <= 0.70) {
+        badge.className = 'text-xs px-2 py-0.5 rounded-full font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        badge.textContent = 'PASSED (Submittable)';
+        showToast("Alpha passed simulation criteria!", "success");
+      } else {
+        badge.className = 'text-xs px-2 py-0.5 rounded-full font-semibold bg-red-500/20 text-red-400 border border-red-500/30';
+        badge.textContent = 'NEEDS TUNING';
+        showToast("Simulation complete. Low Sharpe or high turnover.", "error");
+      }
+
+      loadStats();
+    }
+
+    async function quickSimulate(alphaId) {
+      showToast(`Simulating alpha #${alphaId}...`);
+      const res = await fetch('/api/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alpha_id: alphaId })
+      });
+      const data = await res.json();
+      showToast(`Simulation #${alphaId} complete! Sharpe: ${data.metrics?.sharpe || '-'}`, "success");
+      loadStats();
+      if (currentTab === 'journal') loadJournal();
+    }
+
+    async function loadJournal() {
+      const statusFilter = document.getElementById('journal-filter-status').value;
+      const url = statusFilter ? `/api/alphas?status=${statusFilter}&limit=100` : '/api/alphas?limit=100';
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const tbody = document.getElementById('journal-table-body');
+      tbody.innerHTML = '';
+
+      if (!data.alphas || data.alphas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-slate-500">No alphas found in journal.</td></tr>`;
+        return;
+      }
+
+      data.alphas.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-mono text-xs text-slate-400">#${a.id}</td>
+          <td class="py-3 px-4 font-medium text-white">${escapeHtml(a.name)}</td>
+          <td class="py-3 px-4 text-xs text-slate-400">${escapeHtml(a.category)}</td>
+          <td class="py-3 px-4">${getStatusBadge(a.status)}</td>
+          <td class="py-3 px-4 font-mono font-semibold ${getSharpeClass(a.sharpe)}">${a.sharpe !== null ? a.sharpe.toFixed(2) : '-'}</td>
+          <td class="py-3 px-4 font-mono ${getTurnoverClass(a.turnover)}">${a.turnover !== null ? (a.turnover * 100).toFixed(1) + '%' : '-'}</td>
+          <td class="py-3 px-4 font-mono">${a.fitness !== null ? a.fitness.toFixed(2) : '-'}</td>
+          <td class="py-3 px-4 font-mono text-xs">${a.margin_bps !== null ? a.margin_bps.toFixed(1) + ' bps' : '-'}</td>
+          <td class="py-3 px-4 text-right space-x-1">
+            <button onclick="copyFormula('${escapeForJs(a.formula)}')" class="text-xs px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700">Copy</button>
+            ${a.status === 'passed' ? `<button onclick="markSubmitted(${a.id})" class="text-xs px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded">Submit</button>` : ''}
+            ${a.status === 'draft' ? `<button onclick="quickSimulate(${a.id})" class="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded">Simulate</button>` : ''}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function markSubmitted(alphaId) {
+      const res = await fetch('/api/submit_alpha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alpha_id: alphaId })
+      });
+      const data = await res.json();
+      showToast(`Alpha #${alphaId} marked as submitted! Daily quota updated.`, 'success');
+      loadStats();
+      loadJournal();
+    }
+
+    function copyFormula(formula) {
+      navigator.clipboard.writeText(formula);
+      showToast("FastExpr copied to clipboard!", "success");
+    }
+
+    function copyCurrentFormula() {
+      const formula = document.getElementById('editor-formula').value;
+      if (formula) copyFormula(formula);
+    }
+
+    function formatAndCleanFormula() {
+      const formulaEl = document.getElementById('editor-formula');
+      let cleaned = formulaEl.value.replace(/\s+/g, ' ').trim();
+      formulaEl.value = cleaned;
+      validateCurrentFormula();
+    }
+
+    function getStatusBadge(status) {
+      switch (status) {
+        case 'passed':
+          return '<span class="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Passed</span>';
+        case 'submitted':
+          return '<span class="text-xs px-2 py-0.5 rounded-full font-medium bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">Submitted</span>';
+        case 'rejected':
+          return '<span class="text-xs px-2 py-0.5 rounded-full font-medium bg-red-500/20 text-red-400 border border-red-500/30">Rejected</span>';
+        case 'simulated':
+          return '<span class="text-xs px-2 py-0.5 rounded-full font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">Simulated</span>';
+        default:
+          return '<span class="text-xs px-2 py-0.5 rounded-full font-medium bg-slate-800 text-slate-400 border border-slate-700">Draft</span>';
+      }
+    }
+
+    function getSharpeClass(s) {
+      if (s === null || s === undefined) return 'text-slate-400';
+      if (s >= 1.58) return 'text-emerald-400 font-bold';
+      if (s >= 1.25) return 'text-emerald-300';
+      return 'text-red-400';
+    }
+
+    function getTurnoverClass(t) {
+      if (t === null || t === undefined) return 'text-slate-400';
+      if (t <= 0.35) return 'text-emerald-400';
+      if (t <= 0.70) return 'text-amber-400';
+      return 'text-red-400 font-bold';
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function escapeForJs(str) {
+      if (!str) return '';
+      return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
+    // Auto-validate formula as user types (debounced)
+    let typingTimer;
+    document.getElementById('editor-formula').addEventListener('input', () => {
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(validateCurrentFormula, 400);
+    });
+
+    // Initial load
+    loadStats();
+    loadTemplates();
+  </script>
+</body>
+</html>
+
