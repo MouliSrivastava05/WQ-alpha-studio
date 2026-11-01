@@ -9,7 +9,7 @@ Welcome to **WorldQuant Alpha Studio**, an end-to-end quantitative research tool
 
 ### 1. Launch the Interactive Web Dashboard
 ```bash
-cd /Users/moulisrivastava/.gemini/antigravity/scratch/wq-alpha-studio
+cd /Users/moulisrivastava/Desktop/wq-alpha-studio
 python3 cli.py serve
 ```
 Open **`http://localhost:8888`** in your browser to access the complete graphical suite:
